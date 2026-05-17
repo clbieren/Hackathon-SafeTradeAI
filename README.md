@@ -25,9 +25,9 @@ Sistem, maksimum hız ve asenkron çalışma prensibiyle tasarlanmıştır:
 
 ## 👥 Takım
 
-* **Eren Çelebi** - Frontend & UI/UX Design
+* **Eren Çelebi** - Backend Architecture & API Integration
 * **Kayra Alan** - Data Services & Scraper Engine
-* **Emirhan Kiren** - Backend Architecture & API Integration
+* **Emirhan Kiren** - Frontend & UI/UX Design
 
 ## 🌍 Canlı Demo
 
