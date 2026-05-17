@@ -31,10 +31,9 @@ Sistem, maksimum hız ve asenkron çalışma prensibiyle tasarlanmıştır:
 
 ## 👥 Takım
 
-Bu proje, 48 saatlik hackathon maratonu kapsamında sıfırdan geliştirilmiştir:
 *   **Eren Çelebi** - Backend Architecture & API Integration
-*   **Kayra** - Data Services & Scraper Engine
-*   **Kiren** - Frontend & UI/UX Design
+*   **Kayra Alan** - Data Services & Scraper Engine
+*   **Emirhan Kiren** - Frontend & UI/UX Design
 
 ---
 
