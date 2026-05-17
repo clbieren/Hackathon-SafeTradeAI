@@ -17,3 +17,5 @@ bcrypt==4.0.1
 python-multipart==0.0.9
 resend>=2.0.0
 APScheduler>=3.10.4
+requests>=2.32.3
+yfinance>=0.2.54
