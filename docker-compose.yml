@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: safetrade_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: safetrade_user
+      POSTGRES_PASSWORD: supersecretpassword
+      POSTGRES_DB: safetrade_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U safetrade_user -d safetrade_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - safetrade_net
+
+  backend:
+    build: .
+    container_name: safetrade_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://safetrade_user:supersecretpassword@db:5432/safetrade_db
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/code
+      - ./reports:/code/reports
+    networks:
+      - safetrade_net
+
+  db-migrate:
+    build: .
+    container_name: safetrade_migrate
+    command: python reset_db.py --yes
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://safetrade_user:supersecretpassword@db:5432/safetrade_db
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - safetrade_net
+
+volumes:
+  pgdata:
+
+networks:
+  safetrade_net:
+    driver: bridge
