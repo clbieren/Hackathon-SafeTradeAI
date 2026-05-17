@@ -1,48 +1,41 @@
 """
-main.py — SafeTrade AI Data Mining Microservice
-------------------------------------------------
-Single entry point for the pipeline. Exposes:
-
-  get_company_intelligence(company_name, ticker_symbol)
-      Master orchestration function. Gathers news, complaints, stock data,
-      and the live USD/TRY exchange rate, then assembles everything into the
-      CompanyReport Pydantic schema and returns a clean, API-ready JSON string.
-
-  run_pipeline(company_name, ticker, output_path)
-      Thin wrapper that calls get_company_intelligence and also persists the
-      JSON to a file on disk. Used by the CLI entry point.
-
-Usage (CLI):
-    python main.py --company "Türk Hava Yolları" --ticker THYAO.IS
-    python main.py --company "Apple Inc." --ticker AAPL --output apple_report.json
-    python main.py --company "Garanti BBVA" --ticker GARAN.IS --mock
+SafeTrade AI - B2B Trust Platform (Merged API & Scraper)
+--------------------------------------------------------
+Run API: python main.py
+Run CLI: python main.py --company "Apple Inc." --ticker AAPL
 """
-
 from __future__ import annotations
 
 import argparse
 import json
 import logging
 import sys
-from typing import Any
+import random
+import datetime
+from typing import Any, Optional, List
 
-# --- Internal modules ---
-from finance_api import get_stock_data, get_usd_try_rate
-from scraper import (
-    Complaint,
-    CompanyReport,
-    FinancialMetrics,
-    MarketData,
-    fetch_complaints,
-    fetch_news,
-    generate_mock_complaint_data,
-)
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+# --- Internal Scraper Modules ---
+try:
+    from finance_api import get_stock_data, get_usd_try_rate
+    from scraper import (
+        Complaint,
+        CompanyReport,
+        FinancialMetrics,
+        MarketData,
+        fetch_complaints,
+        fetch_news,
+        generate_mock_complaint_data,
+    )
+except ImportError:
+    pass # Tolerate missing imports if running only for the mock API
 
 # ---------------------------------------------------------------------------
-# Logging
+# Logging Setup
 # ---------------------------------------------------------------------------
-# Force UTF-8 on the Windows console so Turkish characters and log symbols
-# do not cause UnicodeEncodeError on CP1254 / CP1252 terminals.
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
@@ -54,256 +47,240 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# FastAPI Setup (UI Dashboard Backend)
+# ---------------------------------------------------------------------------
+app = FastAPI(
+    title="SafeTrade AI API",
+    description="B2B Trust Platform — Trust Score, Financial Risk & Competitor Intelligence",
+    version="1.0.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Static dummy data pools
+COMPANIES = {
+    "comp_001": {"name": "Nexora Logistics GmbH", "sector": "Logistics & Supply Chain", "country": "Germany", "founded": 2009, "employees": 1240, "annual_revenue_usd": 87_400_000},
+    "comp_002": {"name": "Stellartech Solutions Ltd", "sector": "Enterprise SaaS", "country": "United Kingdom", "founded": 2015, "employees": 380, "annual_revenue_usd": 22_100_000},
+    "comp_003": {"name": "Ironclad Manufacturing Co.", "sector": "Industrial Manufacturing", "country": "United States", "founded": 1998, "employees": 4700, "annual_revenue_usd": 312_000_000},
+    "comp_004": {"name": "AquaFlow Renewables", "sector": "Renewable Energy", "country": "Netherlands", "founded": 2018, "employees": 215, "annual_revenue_usd": 11_500_000},
+    "comp_005": {"name": "PrimeMed Healthcare", "sector": "Healthcare & Pharma", "country": "Canada", "founded": 2003, "employees": 2900, "annual_revenue_usd": 198_600_000},
+}
+
+RISK_FACTORS_POOL = [
+    {"factor": "Late payment history (>30 days)", "severity": "high", "weight": 0.25},
+    {"factor": "Debt-to-equity ratio above industry average", "severity": "medium", "weight": 0.18},
+    {"factor": "Revenue decline >10% YoY", "severity": "high", "weight": 0.22},
+    {"factor": "Pending litigation exposure", "severity": "medium", "weight": 0.15},
+    {"factor": "Currency exposure in volatile markets", "severity": "low", "weight": 0.08},
+    {"factor": "Concentrated customer base (top 3 > 60% revenue)", "severity": "medium", "weight": 0.14},
+    {"factor": "Negative press sentiment (last 90 days)", "severity": "low", "weight": 0.07},
+    {"factor": "Regulatory compliance gap identified", "severity": "high", "weight": 0.21},
+    {"factor": "Supplier dependency risk", "severity": "medium", "weight": 0.11},
+    {"factor": "Insurance coverage below threshold", "severity": "low", "weight": 0.06},
+]
+
+SECTORS = {
+    "Logistics & Supply Chain": [
+        {"name": "GlobalFreight AG", "market_share_pct": 18.4, "trend": "stable", "hq": "Switzerland"},
+        {"name": "SwiftRoute Inc.", "market_share_pct": 14.1, "trend": "growing", "hq": "USA"},
+    ],
+    "Enterprise SaaS": [
+        {"name": "CoreSuite Technologies", "market_share_pct": 22.3, "trend": "growing", "hq": "USA"},
+    ],
+}
+
+class TrustScoreResponse(BaseModel):
+    request_id: str
+    timestamp: str
+    company_id: str
+    company_name: str
+    sector: str
+    trust_score: float
+    grade: str
+    confidence_level: str
+    breakdown: dict
+    recommendation: str
+    next_review_date: str
+
+class FinancialRiskResponse(BaseModel):
+    request_id: str
+    timestamp: str
+    company_id: str
+    company_name: str
+    overall_risk_rating: str
+    risk_score: float
+    risk_factors: list
+    financial_snapshot: dict
+    credit_limit_recommendation_usd: int
+    alert_flags: list
+
+class MarketShareResponse(BaseModel):
+    request_id: str
+    timestamp: str
+    sector: str
+    analysis_period: str
+    target_company: dict
+    competitors: list
+    market_insights: dict
+
+def _request_id() -> str:
+    import uuid
+    return f"req_{uuid.uuid4().hex[:12].upper()}"
+
+def _now() -> str:
+    return datetime.datetime.utcnow().isoformat() + "Z"
+
+def _score_to_grade(score: float) -> str:
+    if score >= 90: return "AAA"
+    if score >= 80: return "AA"
+    if score >= 70: return "A"
+    if score >= 60: return "BBB"
+    if score >= 50: return "BB"
+    if score >= 40: return "B"
+    return "CCC"
+
+def _risk_label(score: float) -> str:
+    if score <= 25: return "LOW"
+    if score <= 50: return "MEDIUM"
+    if score <= 75: return "HIGH"
+    return "CRITICAL"
+
+def _get_company(company_id: str) -> dict:
+    if company_id not in COMPANIES:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": "company_not_found", "valid_ids": list(COMPANIES.keys())},
+        )
+    return COMPANIES[company_id]
+
+@app.get("/", tags=["Health"])
+def root():
+    return {"service": "SafeTrade AI API", "status": "operational"}
+
+@app.get("/api/v1/trust-score/{company_id}", response_model=TrustScoreResponse, tags=["Trust Score"])
+def get_trust_score(company_id: str, include_history: Optional[bool] = Query(False)):
+    company = _get_company(company_id)
+    rng = random.Random(company_id)
+    score = round(rng.uniform(42.0, 94.0), 1)
+    grade = _score_to_grade(score)
+    
+    return {
+        "request_id": _request_id(),
+        "timestamp": _now(),
+        "company_id": company_id,
+        "company_name": company["name"],
+        "sector": company["sector"],
+        "trust_score": score,
+        "grade": grade,
+        "confidence_level": "HIGH" if score > 60 else "MEDIUM",
+        "breakdown": {"payment_behavior": round(rng.uniform(40, 100), 1)},
+        "recommendation": "System Recommended.",
+        "next_review_date": (datetime.date.today() + datetime.timedelta(days=90)).isoformat(),
+    }
+
+@app.get("/api/v1/financial-risk/{company_id}", response_model=FinancialRiskResponse, tags=["Financial Risk"])
+def get_financial_risk(company_id: str, currency: Optional[str] = Query("USD")):
+    company = _get_company(company_id)
+    rng = random.Random(company_id + "risk")
+    risk_score = round(rng.uniform(12.0, 78.0), 1)
+    revenue = company["annual_revenue_usd"]
+    
+    return {
+        "request_id": _request_id(),
+        "timestamp": _now(),
+        "company_id": company_id,
+        "company_name": company["name"],
+        "overall_risk_rating": _risk_label(risk_score),
+        "risk_score": risk_score,
+        "risk_factors": rng.sample(RISK_FACTORS_POOL, k=3),
+        "financial_snapshot": {"annual_revenue_usd": revenue, "currency": currency},
+        "credit_limit_recommendation_usd": int((revenue * rng.uniform(0.04, 0.18)) / 1000) * 1000,
+        "alert_flags": [],
+    }
+
+@app.get("/api/v1/market-share/{company_id}", response_model=MarketShareResponse, tags=["Competitor Intelligence"])
+def get_market_share(company_id: str, top_n: Optional[int] = Query(5)):
+    company = _get_company(company_id)
+    sector = company["sector"]
+    competitors = SECTORS.get(sector, list(SECTORS.values())[0])[:top_n]
+    
+    return {
+        "request_id": _request_id(),
+        "timestamp": _now(),
+        "sector": sector,
+        "analysis_period": "2026-Q2",
+        "target_company": {"company_id": company_id, "name": company["name"], "market_share_pct": 12.5, "trend": "stable", "hq": company["country"]},
+        "competitors": competitors,
+        "market_insights": {"total_addressable_market_usd": 1000000},
+    }
 
 # ---------------------------------------------------------------------------
-# Master intelligence function
+# Data Mining Orchestration (Scraper)
 # ---------------------------------------------------------------------------
-
-def get_company_intelligence(
-    company_name: str,
-    ticker_symbol: str,
-    use_mock_fallback: bool = False,
-) -> str:
-    """
-    Orchestrate the full SafeTrade AI data-gathering pipeline for one company.
-
-    Parameters
-    ----------
-    company_name : str
-        Human-readable company name used for news and complaint searches.
-        Example: ``"Türk Hava Yolları"`` or ``"Apple Inc."``.
-    ticker_symbol : str
-        Stock ticker recognised by Yahoo Finance.
-        Example: ``"THYAO.IS"``, ``"GARAN.IS"``, ``"AAPL"``.
-    use_mock_fallback : bool
-        If ``True``, skip all live scraping and return purely synthetic
-        Turkish demo data.  Useful for offline demos and CI smoke-tests.
-
-    Returns
-    -------
-    str
-        A UTF-8 JSON string that conforms to the ``CompanyReport`` Pydantic
-        schema.  The string is indented (2 spaces) and safe to pass directly
-        to any downstream API endpoint.
-
-    Pipeline steps
-    --------------
-    1. **News**       — Google News RSS → Bing News → mock fallback
-    2. **Complaints** — Şikayetvar (stub) → mock fallback
-    3. **Stock data** — yfinance: current price, market cap, 1-month trend
-    4. **FX rate**    — Frankfurter ECB → open.er-api.com → fawazahmed0 CDN
-    5. **Assemble**   — Merge all data into CompanyReport, validate with Pydantic
-    6. **Serialise**  — Return as clean, indented JSON string
-    """
+def get_company_intelligence(company_name: str, ticker_symbol: str, use_mock_fallback: bool = False) -> str:
     ticker = ticker_symbol.strip().upper()
     logger.info("=" * 60)
     logger.info("get_company_intelligence('%s', '%s')", company_name, ticker)
-    logger.info("=" * 60)
-
-    # ------------------------------------------------------------------
-    # Step 1 — News
-    # ------------------------------------------------------------------
+    
     if use_mock_fallback:
-        logger.info("[MOCK] Generating synthetic news …")
         news = generate_mock_complaint_data(company_name)["news"]
-    else:
-        logger.info("Step 1/4 — Fetching news …")
-        news = fetch_news(company_name)
-    logger.info("  [OK] %d news items collected.", len(news))
-
-    # ------------------------------------------------------------------
-    # Step 2 — Complaints
-    # ------------------------------------------------------------------
-    if use_mock_fallback:
-        logger.info("[MOCK] Generating synthetic complaints …")
         complaints = generate_mock_complaint_data(company_name)["complaints"]
     else:
-        logger.info("Step 2/4 — Fetching complaints …")
+        news = fetch_news(company_name)
         complaints = fetch_complaints(company_name)
-    logger.info("  [OK] %d complaints collected.", len(complaints))
-
-    # ------------------------------------------------------------------
-    # Step 3 — Stock data (yfinance)
-    # ------------------------------------------------------------------
-    logger.info("Step 3/4 — Fetching stock & financial data for '%s' …", ticker)
-    stock: dict[str, Any] = get_stock_data(ticker)
-
-    if stock.get("error"):
-        logger.warning("  [WARN] Stock data error: %s", stock["error"])
-
-    # Map finance_api fields → Pydantic FinancialMetrics
-    financial_metrics = FinancialMetrics(
-        market_cap=stock.get("market_cap"),
-        pe_ratio=None,       # not returned by get_stock_data; extend if needed
-        eps=None,
-        revenue=None,
-        net_income=None,
-        debt_to_equity=None,
-        return_on_equity=None,
-    )
-
-    # Map finance_api fields → Pydantic MarketData
-    market_data = MarketData(
-        ticker=ticker,
-        current_price=stock.get("current_price"),
-        previous_close=stock.get("previous_close"),
-        day_high=None,       # not in get_stock_data summary; available via yf.info
-        day_low=None,
-        volume=None,
-        fifty_two_week_high=None,
-        fifty_two_week_low=None,
-        beta=None,
-        # Extra fields allowed by model_config extra="allow"
-        price_change_pct=stock.get("price_change_pct"),
-        currency=stock.get("currency"),
-        company_name_yf=stock.get("company_name"),
-        trend_1m=stock.get("trend_1m") or [],
-    )
-    logger.info(
-        "  [OK] Stock data: price=%s %s, market_cap=%s",
-        stock.get("current_price"),
-        stock.get("currency", ""),
-        stock.get("market_cap"),
-    )
-
-    # ------------------------------------------------------------------
-    # Step 4 — USD/TRY exchange rate
-    # ------------------------------------------------------------------
-    logger.info("Step 4/4 — Fetching USD/TRY exchange rate …")
-    fx: dict[str, Any] = get_usd_try_rate()
-
-    if fx.get("error"):
-        logger.warning("  [WARN] FX rate error: %s", fx["error"])
-    else:
-        logger.info(
-            "  [OK] 1 USD = %.4f TRY (source: %s)",
-            fx.get("rate", 0),
-            fx.get("provider", "unknown"),
-        )
-
-    # ------------------------------------------------------------------
-    # Step 5 — Assemble CompanyReport
-    # ------------------------------------------------------------------
-    logger.info("Assembling CompanyReport …")
-    report = CompanyReport(
-        company_name=company_name,
-        recent_news=news,
-        complaints=complaints,
-        financial_metrics=financial_metrics,
-        market_data=market_data,
-        # fx_rate lives in extra fields since it's not in the base schema yet;
-        # downstream consumers can read it from the JSON directly.
-    )
-
-    # Attach FX data and any pipeline metadata as top-level extra fields.
-    # Pydantic v2 model_dump gives us a plain dict we can augment freely.
-    report_dict = report.model_dump()
-    report_dict["usd_try_rate"] = {
-        "rate": fx.get("rate"),
-        "provider": fx.get("provider"),
-        "error": fx.get("error"),
+        
+    stock = get_stock_data(ticker)
+    fx = get_usd_try_rate()
+    
+    report_dict = {
+        "company_name": company_name,
+        "recent_news": news,
+        "complaints": complaints,
+        "financial_metrics": {"market_cap": stock.get("market_cap")},
+        "market_data": {"ticker": ticker, "current_price": stock.get("current_price")},
+        "usd_try_rate": {"rate": fx.get("rate")},
     }
-    report_dict["pipeline_meta"] = {
-        "ticker": ticker,
-        "stock_data_error": stock.get("error"),
-        "mock_mode": use_mock_fallback,
-    }
+    return json.dumps(report_dict, indent=2, ensure_ascii=False)
 
-    # ------------------------------------------------------------------
-    # Step 6 — Serialise to clean, API-ready JSON
-    # ------------------------------------------------------------------
-    json_output = json.dumps(report_dict, indent=2, ensure_ascii=False)
-
-    logger.info("=" * 60)
-    logger.info("Pipeline complete. Report has %d bytes.", len(json_output.encode("utf-8")))
-    logger.info("=" * 60)
-
-    return json_output
-
-
-# ---------------------------------------------------------------------------
-# File-persisting wrapper (used by CLI)
-# ---------------------------------------------------------------------------
-
-def run_pipeline(
-    company_name: str,
-    ticker: str,
-    output_path: str,
-    use_mock_fallback: bool = False,
-) -> str:
-    """
-    Call get_company_intelligence and also write the JSON to *output_path*.
-
-    Returns the same JSON string so callers can inspect or forward it.
-    """
+def run_pipeline(company_name: str, ticker: str, output_path: str, use_mock_fallback: bool = False) -> str:
     json_output = get_company_intelligence(company_name, ticker, use_mock_fallback)
-
-    logger.info("Writing report to '%s' …", output_path)
     with open(output_path, "w", encoding="utf-8") as fh:
         fh.write(json_output)
-    logger.info("Saved [OK]")
-
     return json_output
 
-
-# ---------------------------------------------------------------------------
-# CLI entry point
-# ---------------------------------------------------------------------------
-
 def _build_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        prog="safetrade-miner",
-        description="SafeTrade AI — Data Mining Microservice",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-examples:
-  python main.py --company "Türk Hava Yolları" --ticker THYAO.IS
-  python main.py --company "Apple Inc." --ticker AAPL --output apple.json
-  python main.py --company "Garanti BBVA" --ticker GARAN.IS --mock
-        """,
-    )
-    parser.add_argument(
-        "--company",
-        required=True,
-        metavar="NAME",
-        help="Full company name used for news/complaint searches.",
-    )
-    parser.add_argument(
-        "--ticker",
-        required=True,
-        metavar="SYMBOL",
-        help="Yahoo Finance ticker symbol (e.g. THYAO.IS, AAPL).",
-    )
-    parser.add_argument(
-        "--output",
-        default="report.json",
-        metavar="FILE",
-        help="Output JSON file path (default: report.json).",
-    )
-    parser.add_argument(
-        "--mock",
-        action="store_true",
-        help="Skip live scraping and use synthetic Turkish demo data instead.",
-    )
-    parser.add_argument(
-        "--print",
-        dest="print_json",
-        action="store_true",
-        help="Print the final JSON to stdout in addition to saving it.",
-    )
+    parser = argparse.ArgumentParser(prog="safetrade-miner", description="SafeTrade AI Data Mining")
+    parser.add_argument("--company", required=True)
+    parser.add_argument("--ticker", required=True)
+    parser.add_argument("--output", default="report.json")
+    parser.add_argument("--mock", action="store_true")
+    parser.add_argument("--print", dest="print_json", action="store_true")
     return parser
 
-
+# ---------------------------------------------------------------------------
+# Single Entry Point
+# ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    args = _build_arg_parser().parse_args()
-
-    result_json = run_pipeline(
-        company_name=args.company,
-        ticker=args.ticker.upper(),
-        output_path=args.output,
-        use_mock_fallback=args.mock,
-    )
-
-    if args.print_json:
-        print("\n" + "-" * 60)
-        print(result_json)
+    # If a company name is provided via CLI, run the scraper
+    if len(sys.argv) > 1 and "--company" in sys.argv:
+        args = _build_arg_parser().parse_args()
+        result_json = run_pipeline(
+            company_name=args.company,
+            ticker=args.ticker.upper(),
+            output_path=args.output,
+            use_mock_fallback=args.mock,
+        )
+        if args.print_json:
+            print("\n" + "-" * 60)
+            print(result_json)
+    else:
+        # Otherwise, launch the FastAPI server for the UI
+        import uvicorn
+        uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

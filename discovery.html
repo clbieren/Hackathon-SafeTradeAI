@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+    <title>Tedarikçi Keşfi | SafeTrade AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        .page-header {
+            padding: 4rem 0 2rem;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 3rem;
+        }
+
+        .search-container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 3rem;
+            align-items: start;
+        }
+
+        .filter-sidebar {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2rem;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .filter-group {
+            margin-bottom: 1.5rem;
+        }
+
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .company-card-new {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .company-card-new:hover {
+            transform: translateY(-5px);
+            border-color: var(--secondary);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .company-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .company-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .company-id {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .score-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .score-pill.high {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .score-pill.low {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .btn-full {
+            width: 100%;
+            margin-top: 1.5rem;
+            padding: 0.8rem;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            color: var(--secondary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-full:hover {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .loader-container {
+            grid-column: 1 / -1;
+            padding: 5rem;
+            text-align: center;
+        }
+
+        .loader-ring {
+            width: 48px;
+            height: 48px;
+            border: 3px solid transparent;
+            border-top-color: var(--primary);
+            border-right-color: var(--primary);
+            border-radius: 50%;
+            display: inline-block;
+            animation: rotate 1s linear infinite;
+        }
+
+        @keyframes rotate {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Mobile Fixes */
+        @media (max-width: 900px) {
+            .search-container {
+                grid-template-columns: 1fr;
+            }
+            .filter-sidebar {
+                position: static;
+                margin-bottom: 2rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .page-header {
+                padding: 2rem 0;
+            }
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            padding: 5rem;
+            text-align: center;
+            color: var(--text-dim);
+        }
+
+        #mapContainer {
+            width: 100%;
+            height: 400px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 2rem;
+            display: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="container">
+        <nav class="navbar">
+            <a href="index.html" class="logo" style="text-decoration:none; color:white">
+                <div class="logo-icon">
+                    <i data-lucide="shield" style="color:white; width:18px; height:18px"></i>
+                </div>
+                <span>SafeTrade <b>AI</b></span>
+            </a>
+            <div class="nav-links">
+                <a href="#">Özellikler</a>
+                <a href="#">Lisanslama ve Fiyatlandırma</a>
+                <a href="#">Hakkımızda</a>
+            </div>
+            <div class="nav-actions">
+                <div
+                    style="width:32px; height:32px; background:rgba(255,255,255,0.05); border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                    <i data-lucide="user" style="width:16px; height:16px; color:var(--text-dim)"></i>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="page-header">
+            <h1>Tedarikçi Keşfi</h1>
+            <p style="color:var(--text-dim)">Yapay zeka ile tedarikçi havuzunuzu genişletin ve analiz edin.</p>
+        </div>
+
+        <div class="search-container">
+            <aside class="filter-sidebar">
+                <div class="filter-group">
+                    <label>Sektör / Anahtar Kelime</label>
+                    <input type="text" id="qInput" placeholder="Örn: Lojistik, Yazılım...">
+                </div>
+                <div class="filter-group">
+                    <label>Şehir (İl)</label>
+                    <select id="citySelect">
+                        <option value="">İl Seçiniz</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>İlçe</label>
+                    <select id="districtSelect" disabled>
+                        <option value="">Önce İl Seçiniz</option>
+                    </select>
+                </div>
+                <button class="btn-pill" style="width:100%; border:none; cursor:pointer;" id="searchBtn"
+                    onclick="fetchDiscoverResults()">
+                    <i data-lucide="search" style="width:16px; height:16px"></i>
+                    Aramayı Başlat
+                </button>
+            </aside>
+
+            <div class="results-area">
+                <div id="mapContainer"></div>
+                <div id="resultsList" class="results-grid">
+                    <div class="empty-state">
+                        <i data-lucide="layers" style="width:48px; height:48px; margin-bottom:1.5rem; opacity:0.2"></i>
+                        <p>Analiz etmek istediğiniz firmaları bulmak için filtreleri kullanın.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toastContainer" style="position:fixed; bottom:2rem; right:2rem; z-index:1000"></div>
+
+    <script src="auth.js"></script>
+    <script>AuthManager.requireAuth();</script>
+    <script src="app.js"></script>
+    <script>
+        let _map = null;
+        let _markers = [];
+
+        function _getMarkerColor(rating) {
+            if (!rating) return '#6b7280';
+            if (rating >= 4.5) return '#10b981';
+            if (rating >= 4.0) return '#f59e0b';
+            return '#ef4444';
+        }
+
+        function _initMap(lat, lng) {
+            const mapEl = document.getElementById('mapContainer');
+            mapEl.style.display = 'block';
+            if (_map) {
+                _map.remove();
+                _map = null;
+            }
+            _map = L.map('mapContainer').setView([lat, lng], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap',
+                maxZoom: 19,
+            }).addTo(_map);
+        }
+
+        function _addMarker(result) {
+            if (!_map || !result.lat || !result.lng) return;
+            const color = _getMarkerColor(result.rating);
+            const icon = L.divIcon({
+                className: '',
+                html: `<div style="
+                    background:${color};
+                    width:36px;height:36px;
+                    border-radius:50% 50% 50% 0;
+                    transform:rotate(-45deg);
+                    border:3px solid white;
+                    box-shadow:0 2px 8px rgba(0,0,0,0.4);
+                "></div>`,
+                iconSize: [36, 36],
+                iconAnchor: [18, 36],
+            });
+            const marker = L.marker([result.lat, result.lng], { icon }).addTo(_map);
+            const rating = result.rating ? `⭐ ${result.rating} (${result.user_ratings_total || 0})` : 'Puan yok';
+            marker.bindPopup(`
+                <div style="font-family:Outfit,sans-serif;min-width:180px">
+                    <strong style="font-size:0.95rem">${result.name}</strong><br>
+                    <span style="color:#6b7280;font-size:0.8rem">${result.formatted_address || ''}</span><br>
+                    <span style="font-size:0.85rem;margin-top:4px;display:block">${rating}</span>
+                    <button onclick="startDeepAnalysis('${result.name.replace(/'/g, "\\'")}','${(result.formatted_address || '').replace(/'/g, "\\'")}' )"
+                        style="margin-top:8px;background:#7c3aed;color:white;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;width:100%">
+                        Derin Analiz
+                    </button>
+                </div>
+            `);
+            _markers.push(marker);
+        }
+
+        async function fetchDiscoverResults() {
+            const q = document.getElementById('qInput').value.trim();
+            const city = document.getElementById('citySelect').value;
+            const district = document.getElementById('districtSelect').value;
+            const resultsDiv = document.getElementById('resultsList');
+
+            if (!q) {
+                resultsDiv.innerHTML = '<div class="empty-state"><p>Lütfen bir sektör veya anahtar kelime girin.</p></div>';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div class="loader-container"><div class="loader-ring"></div><p style="margin-top:1rem;color:var(--text-dim)">Aranıyor...</p></div>';
+
+            try {
+                const params = new URLSearchParams();
+                if (q) params.append('q', q);
+                if (city) params.append('city', city);
+                if (district) params.append('district', district);
+
+                const resp = await AuthManager.fetch(`${API_BASE}/discover?${params.toString()}`);
+                const data = await resp.json();
+                const results = data.results || [];
+
+                if (results.length === 0) {
+                    resultsDiv.innerHTML = '<div class="empty-state"><p>Sonuç bulunamadı.</p></div>';
+                    return;
+                }
+
+                // Haritayı başlat — ilk sonucun koordinatını kullan
+                const firstWithCoords = results.find(r => r.lat && r.lng);
+                if (firstWithCoords) {
+                    _initMap(firstWithCoords.lat, firstWithCoords.lng);
+                    _markers = [];
+                    results.forEach(r => _addMarker(r));
+                }
+
+                // Kartları render et
+                resultsDiv.innerHTML = results.map(company => {
+                    const isPlaces = company.source === 'google_places';
+                    const rating = company.rating ? `⭐ ${company.rating}` : '';
+                    const reviewCount = company.user_ratings_total ? `(${company.user_ratings_total} yorum)` : '';
+                    const address = company.formatted_address || '';
+                    const score = company.report?.trust_score;
+                    const scoreClass = score >= 70 ? 'high' : 'low';
+                    const scorePill = score != null
+                        ? `<span class="score-pill ${scoreClass}">Güven: ${score}</span>`
+                        : isPlaces && rating
+                            ? `<span class="score-pill high">${rating} ${reviewCount}</span>`
+                            : `<span class="score-pill" style="background:rgba(255,255,255,0.05);color:var(--text-dim)">Analiz yok</span>`;
+
+                    const actionBtn = isPlaces
+                        ? `<button class="btn-full" onclick="startDeepAnalysis('${company.name.replace(/'/g, "\\'")}','${address.replace(/'/g, "\\'")}')">
+                                <i data-lucide="zap" style="width:14px;height:14px"></i> Derin Analiz Yap
+                           </button>`
+                        : `<button class="btn-full" onclick="window.location.href='report.html?id=${company.id}'">
+                                <i data-lucide="file-text" style="width:14px;height:14px"></i> Raporu Görüntüle
+                           </button>`;
+
+                    return `
+                        <div class="company-card-new" onclick="_map && _map.setView([${company.lat || 0},${company.lng || 0}],16)">
+                            <div class="company-header">
+                                <div>
+                                    <div class="company-name">${company.name}</div>
+                                    <div class="company-id">${address}</div>
+                                </div>
+                                ${scorePill}
+                            </div>
+                            ${actionBtn}
+                        </div>`;
+                }).join('');
+
+                lucide.createIcons();
+            } catch (err) {
+                resultsDiv.innerHTML = `<div class="empty-state"><p>Hata: ${err.message}</p></div>`;
+            }
+        }
+
+        async function startDeepAnalysis(companyName, fullAddress) {
+            if (!companyName || !fullAddress) return;
+
+            const resultsDiv = document.getElementById('resultsList');
+            resultsDiv.innerHTML = '<div class="loader-container"><div class="loader-ring"></div><p style="margin-top:1rem;color:var(--text-dim)">Derin analiz başlatılıyor...</p></div>';
+
+            try {
+                // Önce bu isimde firma var mı kontrol et
+                const searchResp = await AuthManager.fetch(`${API_BASE}/companies/search?name=${encodeURIComponent(companyName)}`);
+                let companyId = null;
+
+                if (searchResp.ok) {
+                    const existing = await searchResp.json();
+                    if (existing && existing.id) {
+                        companyId = existing.id;
+                    }
+                }
+
+                // Yoksa oluştur — benzersiz tax_number için timestamp kullan
+                if (!companyId) {
+                    const createResp = await AuthManager.fetch(`${API_BASE}/companies`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: companyName,
+                            tax_number: `DISC-${Date.now()}`
+                        })
+                    });
+                    if (!createResp.ok) throw new Error('Firma kaydı başarısız');
+                    const company = await createResp.json();
+                    companyId = company.id;
+                }
+
+                const params = new URLSearchParams({ address: fullAddress, name: companyName });
+                window.location.href = `report.html?id=${companyId}&${params.toString()}`;
+
+            } catch (err) {
+                resultsDiv.innerHTML = `<div class="empty-state"><p>Hata: ${err.message}</p></div>`;
+            }
+        }
+    </script>
+    <script>
+        lucide.createIcons();
+        document.addEventListener('DOMContentLoaded', () => {
+            AuthManager.updateNavbar();
+            if (typeof loadProvinces === 'function') loadProvinces();
+        });
+    </script>
+</body>
+
+</html>
