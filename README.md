@@ -1,64 +1,46 @@
-# SafeTrade AI
+# 🛡️ SafeTrade AI
 
-AI-assisted business risk and reputation intelligence platform for evaluating commercial counterparties using public and regulated data sources. The system resolves a company identity, collects source evidence, and presents findings with traceable references rather than unsupported claims.
+**English:** AI-powered business risk and reputation intelligence platform that aggregates evidence from public sources, resolves company identity, and presents findings with traceable references.
 
-Türkçe özet: SafeTrade AI, ticari ortaklıkların güvenilirliğini kamuya açık ve düzenlenmiş kaynaklardan toplanan verilerle değerlendiren bir risk istihbarat platformudur. Sistem şirket kimlik çözümlemesi yapar, kanıtları bir araya toplar ve sonuçları destekleyen kaynak referanslarıyla açık ve izlenebilir biçimde sunar.
+**Türkçe:** İşletmelerin ticari güvenilirliğini kamuya açık kaynaklardan toplanan kanıtlarla değerlendiren risk istihbarat platformu. Şirket kimlik çözümlemesi yapar ve sonuçları izlenebilir kaynak referanslarıyla sunar.
 
-## What this project does
+---
 
-SafeTrade AI is designed to help answer a practical business question: "Can we trust this company or counterparty?" It combines company identity resolution, public-source collection, and AI-assisted synthesis to provide a structured risk overview grounded in evidence.
+Türkiye'de ticaretin en büyük görünmez maliyeti "güvensizliktir". KOBİ'ler yeni bir tedarikçi veya müşteri ile çalışırken saatlerini manuel araştırmalarla harcıyor. SafeTrade AI, ticaretteki şüpheyi saniyeler içinde veriye dönüştürüyor.
 
-The platform is intended for operational due-diligence workflows where outputs must be explainable, human-reviewable, and tied to source material.
+## 🚀 Öne Çıkan Özellikler
 
-## Core capabilities
+* **LegalResolver™:** İşletmenin sadece tabela adını veya markasını girin. Sistemimiz çapraz doğrulama ile arka planda resmi ticaret sicil unvanını otomatik olarak tespit eder.
+* **5 Boyutlu Veri Madenciliği:** Şikayetvar, EKAP, MERSİS, haber kaynakları ve dijital harita verileri eşzamanlı olarak taranır.
+* **Gerçek Zamanlı AI Sentezi (Gemini 2.5 Flash):** Toplanan veriler anlık olarak işlenir; Memnuniyet, Kalite, Yönetişim ve Güven boyutlarında analiz edilerek ekrana canlı (SSE Streaming) sunulur.
+* **SafeTrade Skoru:** Karmaşık veriler süzülerek işletmeye net bir güven skoru atanır.
+* **Kaynak-Bağlantılı Raporlar:** Rapordaki her uyarı veya olumlu metin, taranan kaynaklardaki somut kanıtlara bağlıdır.
 
-- Company identity resolution and matching
-- Public-source collection for business and reputation signals
-- AI-assisted synthesis of risk signals into a structured summary
-- Source-linked evidence workflow for human verification
-- Streaming status updates during analysis
+## 🛠️ Teknoloji Mimarı
 
-## Architecture
+Sistem, maksimum hız ve asenkron çalışma prensibiyle tasarlanmıştır:
+* **Backend:** FastAPI (Python), SQLAlchemy, Alembic
+* **Frontend:** Vanilla JS, HTML5, Özel Derin Uzay CSS Teması
+* **Veritabanı & Altyapı:** Supabase (PostgreSQL), Docker
+* **Yapay Zeka:** Google Gemini 2.5 Flash
+* **Akış:** Server-Sent Events (SSE) ile kesintisiz veri aktarımı
 
-The solution is organized around a FastAPI backend, a lightweight frontend, and a data pipeline that gathers signals from multiple sources before synthesizing findings.
+## 👥 Takım
 
-## Repository structure
+* **Eren Çelebi** - Backend Architecture & API Integration
+* **Kayra Alan** - Data Services & Scraper Engine
+* **Emirhan Kiren** - Frontend & UI/UX Design
 
-- backend/ — FastAPI application and business logic
-- frontend/ — UI assets and browser interfaces
-- tests/ — automated validation suite
-- scripts/ — dev and utility scripts
-- docs/ — architecture and legal documents
+## 🏗️ Mimari
 
-## Technology stack
+![SafeTrade AI Architecture](docs/architecture.svg)
 
-- Backend: Python, FastAPI, SQLAlchemy, PostgreSQL
-- Frontend: HTML, JavaScript, CSS
-- AI layer: Google Gemini API
-- Data collection: async scraping and public-source enrichment
-- Infrastructure: Docker, GitHub Actions
+## 🌍 Canlı Demo
 
-## Source-aware approach
+Projemizi lokal kurulumlarla, Docker komutlarıyla uğraşmadan doğrudan canlı ortamda test edebilirsiniz.
 
-This project does not claim that AI outputs are infallible. Instead, the design goal is to make the result auditable: every significant conclusion should be traceable to a source or a set of supporting documents, and the final report should be reviewed by a human before used as a decision basis.
+👉 **Hemen Deneyin:** [www.safeai.com.tr](https://www.safeai.com.tr)
 
-## Legal and compliance note
+## ⚖️ Hukuki & Uyum Notu
 
-Public-data collection must be handled carefully. The project is designed for informational due-diligence workflows and should only use sources that are legally accessible and compliant with applicable terms, privacy obligations, and local data-protection rules. A dedicated legal note is included in `docs/legal.md`.
-
-## Local development
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-pytest tests -q
-```
-
-## CI
-
-This repository includes a GitHub Actions workflow to run the Python test suite automatically on push and pull requests.
-
-## Notes
-
-The project is intentionally framed as a source-linked intelligence workflow, not as a system that guarantees zero hallucination in all circumstances. Responsible AI usage here means auditable evidence, clear limitations, and human oversight.
+Bu proje kamuya açık verilerle çalışan bir istihbarat sistemidir. Veri toplanması ve kullanımı konusunda bkz. `docs/legal.md`.
