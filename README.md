@@ -1,20 +1,18 @@
 # 🛡️ SafeTrade AI
 
-**English:** AI-powered business risk and reputation intelligence platform that aggregates evidence from public sources, resolves company identity, and presents findings with traceable references.
+**Türkiye'nin İlk Gerçek Zamanlı B2B Güven İstihbarat Platformu**
 
-**Türkçe:** İşletmelerin ticari güvenilirliğini kamuya açık kaynaklardan toplanan kanıtlarla değerlendiren risk istihbarat platformu. Şirket kimlik çözümlemesi yapar ve sonuçları izlenebilir kaynak referanslarıyla sunar.
+Türkiye'de ticaretin en büyük görünmez maliyeti "güvensizliktir". KOBİ'ler yeni bir tedarikçi veya müşteri ile çalışırken saatlerini manuel araştırmalarla harcıyor, yanlış iş ortaklığı ve güven riskini tespit etmek için yoğun emek sarf ediyor. SafeTrade AI, ticaretteki şüpheyi saniyeler içinde veriye dönüştürüyor.
 
----
-
-Türkiye'de ticaretin en büyük görünmez maliyeti "güvensizliktir". KOBİ'ler yeni bir tedarikçi veya müşteri ile çalışırken saatlerini manuel araştırmalarla harcıyor. SafeTrade AI, ticaretteki şüpheyi saniyeler içinde veriye dönüştürüyor.
+SafeTrade AI, ticaretteki şüpheyi saniyeler içinde veriye dönüştürüyor. Geliştirdiğimiz yapay zeka tabanlı istihbarat motoru sayesinde, "Kime güvenebilirim?" sorusuna kanıta dayalı, net bir cevap sunuyoruz.
 
 ## 🚀 Öne Çıkan Özellikler
 
-* **LegalResolver™:** İşletmenin sadece tabela adını veya markasını girin. Sistemimiz çapraz doğrulama ile arka planda resmi ticaret sicil unvanını otomatik olarak tespit eder.
-* **5 Boyutlu Veri Madenciliği:** Şikayetvar, EKAP, MERSİS, haber kaynakları ve dijital harita verileri eşzamanlı olarak taranır.
+* **LegalResolver™:** İşletmenin sadece tabela adını veya markasını girin. Sistemimiz 4 kademeli çapraz doğrulama ile arka planda resmi ticaret sicil unvanını otomatik olarak tespit eder.
+* **5 Boyutlu Veri Madenciliği:** Manuel araştırmayı bitiriyoruz. Şikayetvar, EKAP, MERSİS, haber kaynakları ve dijital harita verileri eşzamanlı olarak taranır.
 * **Gerçek Zamanlı AI Sentezi (Gemini 2.5 Flash):** Toplanan veriler anlık olarak işlenir; Memnuniyet, Kalite, Yönetişim ve Güven boyutlarında analiz edilerek ekrana canlı (SSE Streaming) sunulur.
-* **SafeTrade Skoru:** Karmaşık veriler süzülerek işletmeye net bir güven skoru atanır.
-* **Kaynak-Bağlantılı Raporlar:** Rapordaki her uyarı veya olumlu metin, taranan kaynaklardaki somut kanıtlara bağlıdır.
+* **7 Saniyede SafeTrade Skoru:** Karmaşık veriler süzülerek işletmeye 0 ile 100 arasında net, tarafsız bir güven skoru atanır.
+* **Sıfır Halüsinasyon:** Rapordaki her uyarı veya olumlu metin, taranan kaynaklardaki somut kanıtlara dayanır.
 
 ## 🛠️ Teknoloji Mimarı
 
@@ -31,16 +29,8 @@ Sistem, maksimum hız ve asenkron çalışma prensibiyle tasarlanmıştır:
 * **Kayra Alan** - Data Services & Scraper Engine
 * **Emirhan Kiren** - Frontend & UI/UX Design
 
-## 🏗️ Mimari
-
-![SafeTrade AI Architecture](docs/architecture.svg)
-
 ## 🌍 Canlı Demo
 
-Projemizi lokal kurulumlarla, Docker komutlarıyla uğraşmadan doğrudan canlı ortamda test edebilirsiniz.
+Projemizi lokal kurulumlarla, Docker komutlarıyla uğraşmadan doğrudan canlı ortamda test edebilirsiniz. Uygulamamızı yayına aldık!
 
 👉 **Hemen Deneyin:** [www.safeai.com.tr](https://www.safeai.com.tr)
-
-## ⚖️ Hukuki & Uyum Notu
-
-Bu proje kamuya açık verilerle çalışan bir istihbarat sistemidir. Veri toplanması ve kullanımı konusunda bkz. `docs/legal.md`.
