@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 520" role="img" aria-labelledby="title desc">
+  <title id="title">SafeTrade AI architecture diagram</title>
+  <desc id="desc">A data flow diagram showing frontend, backend, database, LLM, and data source integration.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1">
+      <stop offset="0%" stop-color="#08111f"/>
+      <stop offset="100%" stop-color="#101b31"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" x2="1">
+      <stop offset="0%" stop-color="#12243d"/>
+      <stop offset="100%" stop-color="#18304d"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L9,3 z" fill="#7dd3fc"/>
+    </marker>
+  </defs>
+
+  <rect width="980" height="520" fill="url(#bg)"/>
+
+  <text x="490" y="55" text-anchor="middle" fill="#e2e8f0" font-size="28" font-family="Arial, sans-serif" font-weight="700">SafeTrade AI Architecture</text>
+
+  <rect x="80" y="110" width="170" height="110" rx="16" fill="url(#card)" stroke="#7dd3fc"/>
+  <text x="165" y="150" text-anchor="middle" fill="#e2e8f0" font-size="22" font-family="Arial, sans-serif" font-weight="700">Frontend</text>
+  <text x="165" y="182" text-anchor="middle" fill="#cbd5e1" font-size="14" font-family="Arial, sans-serif">HTML / JS / CSS</text>
+
+  <rect x="355" y="110" width="270" height="110" rx="16" fill="url(#card)" stroke="#7dd3fc"/>
+  <text x="490" y="150" text-anchor="middle" fill="#e2e8f0" font-size="22" font-family="Arial, sans-serif" font-weight="700">FastAPI Backend</text>
+  <text x="490" y="182" text-anchor="middle" fill="#cbd5e1" font-size="14" font-family="Arial, sans-serif">Auth • Company API • Reports • SSE</text>
+
+  <rect x="705" y="110" width="195" height="110" rx="16" fill="url(#card)" stroke="#7dd3fc"/>
+  <text x="803" y="150" text-anchor="middle" fill="#e2e8f0" font-size="22" font-family="Arial, sans-serif" font-weight="700">Data Sources</text>
+  <text x="803" y="182" text-anchor="middle" fill="#cbd5e1" font-size="14" font-family="Arial, sans-serif">Public web • Registers • Reviews</text>
+
+  <rect x="355" y="310" width="270" height="110" rx="16" fill="url(#card)" stroke="#7dd3fc"/>
+  <text x="490" y="350" text-anchor="middle" fill="#e2e8f0" font-size="22" font-family="Arial, sans-serif" font-weight="700">PostgreSQL</text>
+  <text x="490" y="382" text-anchor="middle" fill="#cbd5e1" font-size="14" font-family="Arial, sans-serif">Companies • Reports • Alerts</text>
+
+  <rect x="80" y="310" width="170" height="110" rx="16" fill="url(#card)" stroke="#7dd3fc"/>
+  <text x="165" y="350" text-anchor="middle" fill="#e2e8f0" font-size="22" font-family="Arial, sans-serif" font-weight="700">AI Layer</text>
+  <text x="165" y="382" text-anchor="middle" fill="#cbd5e1" font-size="14" font-family="Arial, sans-serif">Google Gemini</text>
+
+  <path d="M250 165 H355" stroke="#7dd3fc" stroke-width="4" fill="none" marker-end="url(#arrow)"/>
+  <path d="M625 165 H705" stroke="#7dd3fc" stroke-width="4" fill="none" marker-end="url(#arrow)"/>
+  <path d="M490 220 V310" stroke="#7dd3fc" stroke-width="4" fill="none" marker-end="url(#arrow)"/>
+  <path d="M250 365 H355" stroke="#7dd3fc" stroke-width="4" fill="none" marker-end="url(#arrow)"/>
+  <path d="M250 190 L320 190 L320 365 L355 365" stroke="#7dd3fc" stroke-width="4" fill="none" marker-end="url(#arrow)" opacity="0.8"/>
+
+  <text x="490" y="470" text-anchor="middle" fill="#94a3b8" font-size="13" font-family="Arial, sans-serif">Evidence-first intelligence workflow with source-linked outputs</text>
+</svg>
