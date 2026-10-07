@@ -1,36 +1,64 @@
-# 🛡️ SafeTrade AI
+# SafeTrade AI
 
-**Türkiye'nin İlk Gerçek Zamanlı B2B Güven İstihbarat Platformu**
+AI-assisted business risk and reputation intelligence platform for evaluating commercial counterparties using public and regulated data sources. The system resolves a company identity, collects source evidence, and presents findings with traceable references rather than unsupported claims.
 
-Türkiye'de ticaretin en büyük görünmez maliyeti "güvensizliktir". KOBİ'ler yeni bir tedarikçi veya müşteri ile çalışırken saatlerini manuel araştırmalarla harcıyor, yanlış iş ortaklıkları her yıl tahmini 40 Milyar TL'lik zarara yol açıyor.
+Türkçe özet: SafeTrade AI, ticari ortaklıkların güvenilirliğini kamuya açık ve düzenlenmiş kaynaklardan toplanan verilerle değerlendiren bir risk istihbarat platformudur. Sistem şirket kimlik çözümlemesi yapar, kanıtları bir araya toplar ve sonuçları destekleyen kaynak referanslarıyla açık ve izlenebilir biçimde sunar.
 
-SafeTrade AI, ticaretteki şüpheyi saniyeler içinde veriye dönüştürüyor. Geliştirdiğimiz yapay zeka tabanlı istihbarat motoru sayesinde, "Kime güvenebilirim?" sorusuna kanıta dayalı, net ve tarafsız yanıtlar üretiyoruz.
+## What this project does
 
-## 🚀 Öne Çıkan Özellikler
+SafeTrade AI is designed to help answer a practical business question: "Can we trust this company or counterparty?" It combines company identity resolution, public-source collection, and AI-assisted synthesis to provide a structured risk overview grounded in evidence.
 
-* **LegalResolver™:** İşletmenin sadece tabela adını veya markasını girin. Sistemimiz 4 kademeli çapraz doğrulama ile arka planda resmi ticaret sicil unvanını otomatik olarak tespit eder.
-* **5 Boyutlu Veri Madenciliği:** Manuel araştırmayı bitiriyoruz. Şikayetvar, EKAP, MERSİS, haber kaynakları ve dijital harita verileri eşzamanlı olarak taranır.
-* **Gerçek Zamanlı AI Sentezi (Gemini 2.5 Flash):** Toplanan veriler anlık olarak işlenir; Memnuniyet, Kalite, Yönetişim ve Güven boyutlarında analiz edilerek ekrana canlı (SSE Streaming) yansıtılır.
-* **7 Saniyede SafeTrade Skoru:** Karmaşık veriler süzülerek işletmeye 0 ile 100 arasında net, tarafsız bir güven skoru atanır.
-* **Sıfır Halüsinasyon:** Rapordaki her uyarı veya olumlu metin, taranan kaynaklardaki somut kanıtlara dayanır.
+The platform is intended for operational due-diligence workflows where outputs must be explainable, human-reviewable, and tied to source material.
 
-## 🛠️ Teknoloji Mimarı
+## Core capabilities
 
-Sistem, maksimum hız ve asenkron çalışma prensibiyle tasarlanmıştır:
-* **Backend:** FastAPI (Python), SQLAlchemy, Alembic
-* **Frontend:** Vanilla JS, HTML5, Özel Derin Uzay CSS Teması
-* **Veritabanı & Altyapı:** Supabase (PostgreSQL), Docker
-* **Yapay Zeka:** Google Gemini 2.5 Flash
-* **Akış:** Server-Sent Events (SSE) ile kesintisiz veri aktarımı
+- Company identity resolution and matching
+- Public-source collection for business and reputation signals
+- AI-assisted synthesis of risk signals into a structured summary
+- Source-linked evidence workflow for human verification
+- Streaming status updates during analysis
 
-## 👥 Takım
+## Architecture
 
-* **Eren Çelebi** - Backend Architecture & API Integration
-* **Kayra Alan** - Data Services & Scraper Engine
-* **Emirhan Kiren** - Frontend & UI/UX Design
+The solution is organized around a FastAPI backend, a lightweight frontend, and a data pipeline that gathers signals from multiple sources before synthesizing findings.
 
-## 🌍 Canlı Demo
+## Repository structure
 
-Projemizi lokal kurulumlarla, Docker komutlarıyla uğraşmadan doğrudan canlı ortamda test edebilirsiniz. Uygulamamızı yayına aldık!
+- backend/ — FastAPI application and business logic
+- frontend/ — UI assets and browser interfaces
+- tests/ — automated validation suite
+- scripts/ — dev and utility scripts
+- docs/ — architecture and legal documents
 
-👉 **Hemen Deneyin:** [www.safeai.com.tr](https://www.safeai.com.tr)
+## Technology stack
+
+- Backend: Python, FastAPI, SQLAlchemy, PostgreSQL
+- Frontend: HTML, JavaScript, CSS
+- AI layer: Google Gemini API
+- Data collection: async scraping and public-source enrichment
+- Infrastructure: Docker, GitHub Actions
+
+## Source-aware approach
+
+This project does not claim that AI outputs are infallible. Instead, the design goal is to make the result auditable: every significant conclusion should be traceable to a source or a set of supporting documents, and the final report should be reviewed by a human before used as a decision basis.
+
+## Legal and compliance note
+
+Public-data collection must be handled carefully. The project is designed for informational due-diligence workflows and should only use sources that are legally accessible and compliant with applicable terms, privacy obligations, and local data-protection rules. A dedicated legal note is included in `docs/legal.md`.
+
+## Local development
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+pytest tests -q
+```
+
+## CI
+
+This repository includes a GitHub Actions workflow to run the Python test suite automatically on push and pull requests.
+
+## Notes
+
+The project is intentionally framed as a source-linked intelligence workflow, not as a system that guarantees zero hallucination in all circumstances. Responsible AI usage here means auditable evidence, clear limitations, and human oversight.
